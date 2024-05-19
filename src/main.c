@@ -68,6 +68,27 @@ int hashmap_insert(hashmap_t *hm, char *key, char *value)
     return 0;
 }
 
+char *hashmap_find(hashmap_t *hm, char *key)
+{
+    const int hash = hash_str(key);
+    int index = hash % hm->size;
+
+    if (hm->buckets[index] == NULL)
+    {
+        return NULL;
+    }
+
+    // bucket not empty and different value -> collision
+    while (strcmp(hm->buckets[index]->key, key))
+    {
+        index = (index + 1) % hm->size;
+        if (index == (hash % hm->size))
+            return NULL;
+    }
+
+    return hm->buckets[index]->value;
+}
+
 void print_hashmap(const hashmap_t *hm)
 {
     printf("{");
@@ -92,6 +113,7 @@ int main()
 {
     hashmap_t *hm = create_hashmap(3);
     hashmap_insert(hm, "hello", "world");
+    hashmap_insert(hm, "hello", "there");
     print_hashmap(hm);
     delete_hashmap(hm);
     return 0;
