@@ -56,8 +56,6 @@ int hm_insert(hashmap_t *hm, char *key, char *value)
     hm->buckets[index]->key = key;
     hm->buckets[index]->value = value;
 
-    printf("%ld\n", hm->buckets[index]);
-
     return 0;
 }
 
