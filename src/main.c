@@ -25,8 +25,8 @@ entry_t **gen_data(int sample_size)
 
 int main(int argc, char **argv)
 {
-    int size = 10000;
-    int lookup_no = 20000;
+    int size = 10000;      // Number of entries
+    int lookup_no = 20000; // Number of lookups during test
 
     entry_t **data = gen_data(size);
     hashmap_t *hm = init_hm(size);
@@ -41,6 +41,8 @@ int main(int argc, char **argv)
     {
         char key[8], *value;
         snprintf(key, sizeof(key), "key%d", rand() % size);
+
+        // Choose either array or hashmap
         // value = arr_find(data, size, key);
         value = hm_find(hm, key);
     }
