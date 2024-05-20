@@ -1,120 +1,50 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <stdlib.h>
 
-int hash_str(const char *str)
+#include "hashmap.h"
+#include "array.h"
+
+entry_t **gen_data(int sample_size)
 {
-    char const *current = str;
-    const char *end = str + strlen(str);
-    int hash = 0;
-    while (current < end)
+    entry_t **data = (entry_t **)malloc(sizeof(entry_t) * sample_size);
+    for (int i = 0; i < sample_size; i++)
     {
-        hash += (int)*current;
-        current++;
+        int buffer_size = 8;
+        char *key = (char *)malloc(buffer_size), *value = (char *)malloc(buffer_size);
+
+        snprintf(key, sizeof(key), "key%d", i);
+        snprintf(value, sizeof(value), "%d", rand() % 10000);
+
+        data[i] = (entry_t *)malloc(sizeof(entry_t));
+        data[i]->key = key;
+        data[i]->value = value;
     }
-    return hash;
-}
-typedef struct entry
-{
-    char *key;
-    char *value;
-} entry_t;
-
-typedef struct hashmap
-{
-    int size;
-    entry_t **buckets;
-} hashmap_t;
-
-hashmap_t *create_hashmap(int size)
-{
-    hashmap_t *hm = (hashmap_t *)malloc(sizeof(hashmap_t));
-    hm->size = size;
-    hm->buckets = (entry_t **)malloc(hm->size * sizeof(entry_t));
-    return hm;
+    return data;
 }
 
-void delete_hashmap(hashmap_t *hm)
+int main(int argc, char **argv)
 {
+    int size = 10000;
+    int lookup_no = 20000;
 
-    for (int i = 0; i < hm->size; i++)
+    entry_t **data = gen_data(size);
+    hashmap_t *hm = init_hm(size);
+
+    for (int i = 0; i < size; i++)
     {
-        if (hm->buckets[i] != NULL)
-        {
-            free(hm->buckets[i]);
-        }
-    }
-    free(hm->buckets);
-    free(hm);
-}
-
-int hashmap_insert(hashmap_t *hm, char *key, char *value)
-{
-    const int hash = hash_str(key);
-    int index = hash % hm->size;
-
-    // bucket not empty and different value -> collision
-    while (hm->buckets[index] != NULL && strcmp(hm->buckets[index]->key, key))
-    {
-        index = (index + 1) % hm->size;
-        if (index == (hash % hm->size))
-            return -1;
-    }
-    hm->buckets[index] = (entry_t *)malloc(sizeof(entry_t));
-    hm->buckets[index]->key = key;
-    hm->buckets[index]->value = value;
-
-    return 0;
-}
-
-char *hashmap_find(hashmap_t *hm, char *key)
-{
-    const int hash = hash_str(key);
-    int index = hash % hm->size;
-
-    if (hm->buckets[index] == NULL)
-    {
-        return NULL;
+        entry_t *entry = data[i];
+        hm_insert(hm, entry->key, entry->value);
     }
 
-    // bucket not empty and different value -> collision
-    while (strcmp(hm->buckets[index]->key, key))
+    for (int i = 0; i < lookup_no; i++)
     {
-        index = (index + 1) % hm->size;
-        if (index == (hash % hm->size))
-            return NULL;
+        char key[8], *value;
+        snprintf(key, sizeof(key), "key%d", rand() % size);
+        // value = arr_find(data, size, key);
+        value = hm_find(hm, key);
     }
 
-    return hm->buckets[index]->value;
-}
-
-void print_hashmap(const hashmap_t *hm)
-{
-    printf("{");
-    for (int i = 0; i < hm->size; i++)
-    {
-        bool is_last = i == hm->size - 1;
-        if (hm->buckets[i] != NULL)
-        {
-            printf("%s->%s", hm->buckets[i]->key, hm->buckets[i]->value);
-        }
-        else
-        {
-            printf(" ");
-        }
-        if (!is_last)
-            printf(",");
-    }
-    printf("}\n");
-}
-
-int main()
-{
-    hashmap_t *hm = create_hashmap(3);
-    hashmap_insert(hm, "hello", "world");
-    hashmap_insert(hm, "hello", "there");
-    print_hashmap(hm);
-    delete_hashmap(hm);
-    return 0;
+    delete_array(data, size);
+    clean_hm(hm);
 }
