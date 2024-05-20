@@ -13,6 +13,7 @@ int hash_str(const char *str)
     while (current < end)
     {
         hash += (int)*current;
+        hash *= 22091; // Reduce collisions with prime number
         current++;
     }
     return hash;
